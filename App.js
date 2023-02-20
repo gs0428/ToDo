@@ -10,12 +10,21 @@ const STORAGE_KEY = "@toDos";
 export default function App() {
   useEffect(() => {
     loadToDos();
+    const s = AsyncStorage.getItem(STORAGE_KEY);
+    let remember = s === "true" ? true : false;
+    setWorking(remember);
   }, []);
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
-  const travel = () => setWorking(false);
-  const work = () => setWorking(true);
+  const travel = () => {
+    setWorking(false);
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(working.toString()));
+  };
+  const work = () => {
+    setWorking(true);
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(working.toString()));
+  };
   const onChangeText = (e) => setText(e);
   const saveToDos = async (toSave) => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
