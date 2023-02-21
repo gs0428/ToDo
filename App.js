@@ -6,24 +6,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FontAwesome } from "@expo/vector-icons";
 
 const STORAGE_KEY = "@toDos";
+const REMEMBER_KEY = "@location";
 
 export default function App() {
   useEffect(() => {
     loadToDos();
-    const s = AsyncStorage.getItem(STORAGE_KEY);
-    let remember = s === "true" ? true : false;
-    setWorking(remember);
   }, []);
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
   const travel = () => {
     setWorking(false);
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(working.toString()));
+    AsyncStorage.setItem(REMEMBER_KEY, JSON.stringify(working.toString()));
   };
   const work = () => {
     setWorking(true);
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(working.toString()));
+    AsyncStorage.setItem(REMEMBER_KEY, JSON.stringify(working.toString()));
   };
   const onChangeText = (e) => setText(e);
   const saveToDos = async (toSave) => {
@@ -31,7 +29,9 @@ export default function App() {
   };
   const loadToDos = async () => {
     const s = await AsyncStorage.getItem(STORAGE_KEY);
+    const loc = await AsyncStorage.getItem(REMEMBER_KEY);
     setToDos(JSON.parse(s));
+    setWorking(loc !== JSON.stringify("false") ? true : false);
   };
   const addToDo = async () => {
     if (text === "") {
@@ -86,6 +86,7 @@ export default function App() {
             <View style={styles.toDo} key={key}>
               <Text style={styles.toDoText}>{toDos[key].text}</Text>
               <TouchableOpacity onPress={() => deleteToDo(key)}>
+                <FontAwesome name="check-square" size={24} color="black" />
                 <FontAwesome name="trash" size={18} color="white" />
               </TouchableOpacity>
             </View>
