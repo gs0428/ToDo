@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from "react-native";
 import { theme } from "./color";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 
 const STORAGE_KEY = "@toDos";
 const REMEMBER_KEY = "@location";
@@ -24,26 +24,34 @@ export default function App() {
     AsyncStorage.setItem(REMEMBER_KEY, JSON.stringify(working.toString()));
   };
   const onChangeText = (e) => setText(e);
-  const saveToDos = async (toSave) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  const saveToDos = (toSave) => {
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   };
   const loadToDos = async () => {
-    const s = await AsyncStorage.getItem(STORAGE_KEY);
-    const loc = await AsyncStorage.getItem(REMEMBER_KEY);
-    setToDos(JSON.parse(s));
-    setWorking(loc !== JSON.stringify("false") ? true : false);
+    try {
+      const s = await AsyncStorage.getItem(STORAGE_KEY);
+      const loc = await AsyncStorage.getItem(REMEMBER_KEY);
+      setWorking(loc !== JSON.stringify("false") ? true : false);
+      setToDos(s ? JSON.parse(s) : null);
+    } catch (e) {
+      console.log(e);
+    }
   };
   const addToDo = async () => {
     if (text === "") {
       return;
     }
-    const newToDos = {
-      ...toDos,
-      [Date.now()]: { text, working },
-    };
-    setToDos(newToDos);
-    await saveToDos(newToDos);
-    setText("");
+    try {
+      const newToDos = {
+        ...toDos,
+        [Date.now()]: { text, working, done: "false" },
+      };
+      setToDos(newToDos);
+      await saveToDos(newToDos);
+      setText("");
+    } catch (e) {
+      console.log(e);
+    }
   };
   const deleteToDo = async (key) => {
     Alert.alert("Delete ToDo?", "Are you Sure?", [
@@ -52,14 +60,26 @@ export default function App() {
         text: "I'm Sure",
         style: "destructive",
         onPress: async () => {
-          const newToDos = { ...toDos };
-          delete newToDos[key];
-          setToDos(newToDos);
-          await saveToDos(newToDos);
+          try {
+            const newToDos = { ...toDos };
+            delete newToDos[key];
+            setToDos(newToDos);
+            await saveToDos(newToDos);
+          } catch (e) {
+            console.log(e);
+          }
         },
       },
     ]);
     return;
+  };
+  const completeToDo = (key) => {
+    const newToDos = { ...toDos };
+    const d = newToDos[key].done;
+    let done = !d;
+    newToDos[key].done = done;
+    setToDos(newToDos);
+    saveToDos(newToDos);
   };
   return (
     <View style={styles.container}>
@@ -84,11 +104,27 @@ export default function App() {
         {Object.keys(toDos).map((key) =>
           toDos[key].working === working ? (
             <View style={styles.toDo} key={key}>
-              <Text style={styles.toDoText}>{toDos[key].text}</Text>
-              <TouchableOpacity onPress={() => deleteToDo(key)}>
-                <FontAwesome name="check-square" size={24} color="black" />
-                <FontAwesome name="trash" size={18} color="white" />
-              </TouchableOpacity>
+              <Text
+                style={{
+                  ...styles.toDoText,
+                  textDecorationLine: toDos[key].done ? "none" : "line-through",
+                  color: toDos[key].done ? "black" : "grey",
+                }}
+              >
+                {toDos[key].text}
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <TouchableOpacity onPress={() => completeToDo(key)}>
+                  {toDos[key].done ? (
+                    <FontAwesome5 style={styles.icon} name="check-square" size={22} color="black" />
+                  ) : (
+                    <FontAwesome style={styles.icon} name="check-square" size={22} color="black" />
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => deleteToDo(key)}>
+                  <FontAwesome style={styles.icon} name="trash" size={22} color="white" />
+                </TouchableOpacity>
+              </View>
             </View>
           ) : null
         )}
@@ -131,8 +167,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   toDoText: {
-    color: "white  ",
     fontSize: 16,
     fontWeight: "500",
+    textDecorationLine: "line-through",
+  },
+  icon: {
+    marginLeft: 15,
   },
 });
