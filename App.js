@@ -4,6 +4,9 @@ import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert 
 import { theme } from "./color";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+
+// 주석 다 풀면 Travel 페이지 나옴
 
 const STORAGE_KEY = "@toDos";
 const REMEMBER_KEY = "@location";
@@ -12,18 +15,34 @@ export default function App() {
   useEffect(() => {
     loadToDos();
   }, []);
-  const [working, setWorking] = useState(true);
+
+  const date = new Date();
+  const [year, setYear] = useState(date.getFullYear());
+  const [month, setMonth] = useState(date.getMonth() + 1);
+  const [day, setDay] = useState(date.getDate());
+  const time = new Date().getTime();
+  const DateID = year + "" + month + "" + day + "" + time;
+  const today = year + "" + month + "" + day;
+  // const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
   const [editText, setEditText] = useState("");
-  const travel = () => {
-    setWorking(false);
-    AsyncStorage.setItem(REMEMBER_KEY, JSON.stringify(working.toString()));
-  };
-  const work = () => {
-    setWorking(true);
-    AsyncStorage.setItem(REMEMBER_KEY, JSON.stringify(working.toString()));
-  };
+  // const travel = async () => {
+  //   try {
+  //     setWorking(false);
+  //     await AsyncStorage.setItem(REMEMBER_KEY, working.toString());
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // };
+  // const work = async () => {
+  //   try {
+  //     setWorking(true);
+  //     await AsyncStorage.setItem(REMEMBER_KEY, working.toString());
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // };
   const onChangeText = (e) => setText(e);
   const saveToDos = (toSave) => {
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
@@ -33,7 +52,7 @@ export default function App() {
       const s = await AsyncStorage.getItem(STORAGE_KEY);
       const loc = await AsyncStorage.getItem(REMEMBER_KEY);
       setToDos(JSON.parse(s));
-      setWorking(loc !== JSON.stringify("false") ? true : false);
+      // setWorking(loc !== "false" ? true : false);
     } catch (e) {
       console.log(e);
     }
@@ -45,8 +64,10 @@ export default function App() {
     try {
       const newToDos = {
         ...toDos,
-        [Date.now()]: { text, working, done: "false", isEditing: "false" },
+        [DateID]: { text, done: "false", isEditing: "false", date: today },
+        //working,
       };
+      console.log(newToDos);
       setToDos(newToDos);
       await saveToDos(newToDos);
       setText("");
@@ -109,31 +130,78 @@ export default function App() {
       console.log(e);
     }
   };
+
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const handleConfirm = (date) => {
+    setYear(date.getFullYear());
+    setMonth(date.getMonth() + 1);
+    setDay(date.getDate());
+    hideDatePicker();
+  };
+
+  const addCtg = () => {};
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={work}>
-          <Text style={{ ...styles.btnText, color: working ? "white" : theme.grey }}>Work</Text>
+        {/* <TouchableOpacity onPress={work}> */}
+        <TouchableOpacity>
+          <Text style={{ ...styles.btnText, color: "white" }}>To Do List</Text>
+
+          {/* <Text style={{ ...styles.btnText, color: working ? "white" : theme.grey }}>Work</Text> */}
         </TouchableOpacity>
-        <TouchableOpacity onPress={travel}>
+        {/* <TouchableOpacity onPress={travel}>
           <Text style={{ ...styles.btnText, color: !working ? "white" : theme.grey }}>Travel</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <TextInput
         onSubmitEditing={addToDo}
         value={text}
         returnKeyType="done"
         onChangeText={onChangeText}
-        placeholder={working ? "Add a ToDo" : "where do you want to go?"}
+        placeholder="할 일 추가"
+        // placeholder={working ? "Add a ToDo" : "where do you want to go?"}
         style={styles.input}
       />
+      <View style={styles.date}>
+        <FontAwesome5 onPress={showDatePicker} name="calendar-alt" size={24} color="white" />
+        <Text onPress={showDatePicker} style={styles.dateTxt}>
+          {year}년 {month}월 {day}일
+        </Text>
+        <DateTimePickerModal
+          isVisible={isDatePickerVisible}
+          mode="date"
+          display="inline"
+          onConfirm={handleConfirm}
+          onCancel={hideDatePicker}
+          confirmTextIOS="선택"
+          cancelTextIOS="취소"
+        />
+      </View>
+      <View style={{ marginBottom: 10, alignItems: "flex-end" }}>
+        <Text onPress={addCtg} style={{ fontSize: 20, color: "white" }}>
+          카테고리 추가
+        </Text>
+      </View>
       <ScrollView>
-        {Object.keys(toDos).map((key) =>
-          toDos[key].working === working ? (
-            <View style={{ ...styles.toDo, backgroundColor: toDos[key].done ? "#404040" : "#A6A6A6" }} key={key}>
+        {
+          Object.keys(toDos).map((key) => (
+            // toDos[key].working === working ? (
+            <View
+              style={{ ...styles.toDo, display: today === toDos[key].date ? "flex" : "none", backgroundColor: toDos[key].done ? "#404040" : "#A6A6A6" }}
+              key={key}
+            >
               <TextInput
-                placeholder="Edit"
+                placeholder="..."
                 placeholderTextColor="#D9D9D9"
                 onSubmitEditing={() => editedToDo(key)}
                 value={editText}
@@ -141,6 +209,7 @@ export default function App() {
                 onChangeText={changeText}
                 style={{ ...styles.edit, display: toDos[key].isEditing ? "none" : "" }}
               />
+
               <Text
                 style={{
                   ...styles.toDoText,
@@ -151,7 +220,6 @@ export default function App() {
               >
                 {toDos[key].text}
               </Text>
-
               <View style={{ flexDirection: "row", alignItems: "baseline" }}>
                 <TouchableOpacity disabled={toDos[key].done ? false : true} onPress={() => editToDo(key)}>
                   <Feather style={{ ...styles.icon, color: toDos[key].done ? "white" : "#494949" }} name="edit" size={22} />
@@ -168,8 +236,10 @@ export default function App() {
                 </TouchableOpacity>
               </View>
             </View>
-          ) : null
-        )}
+          ))
+          //     : null
+          // )
+        }
       </ScrollView>
     </View>
   );
@@ -182,9 +252,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   header: {
-    justifyContent: "space-between",
-    flexDirection: "row",
     marginTop: 100,
+    alignItems: "center",
   },
   btnText: {
     fontSize: 38,
@@ -219,5 +288,17 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: "#D9D9D9",
+  },
+  date: {
+    marginBottom: 20,
+    paddingVertical: 20,
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+  dateTxt: {
+    fontSize: 20,
+    color: "white",
+    fontWeight: "600",
+    marginLeft: 10,
   },
 });
