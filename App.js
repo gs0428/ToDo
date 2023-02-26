@@ -1,15 +1,13 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from "react-native";
-import { theme } from "./color";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 // 주석 다 풀면 Travel 페이지 나옴
-
-const STORAGE_KEY = "@toDos";
-const REMEMBER_KEY = "@location";
+const STORAGE_KEY = "toDos";
+// const REMEMBER_KEY = "@location";
 
 export default function App() {
   useEffect(() => {
@@ -50,8 +48,16 @@ export default function App() {
   const loadToDos = async () => {
     try {
       const s = await AsyncStorage.getItem(STORAGE_KEY);
-      const loc = await AsyncStorage.getItem(REMEMBER_KEY);
-      setToDos(JSON.parse(s));
+      if (s === null) {
+        const newToDos = {
+          [DateID]: { text: "Welome", done: "false", isEditing: "false", date: today },
+        };
+        setToDos(newToDos);
+        await saveToDos(newToDos);
+      } else {
+        setToDos(JSON.parse(s));
+      }
+      // const loc = await AsyncStorage.getItem(REMEMBER_KEY);
       // setWorking(loc !== "false" ? true : false);
     } catch (e) {
       console.log(e);
@@ -76,10 +82,10 @@ export default function App() {
     }
   };
   const deleteToDo = async (key) => {
-    Alert.alert("Delete ToDo?", "Are you Sure?", [
-      { text: "Cancel" },
+    Alert.alert("삭제하시겠습니까?", "", [
+      { text: "취소" },
       {
-        text: "I'm Sure",
+        text: "삭제",
         style: "destructive",
         onPress: async () => {
           try {
@@ -179,8 +185,8 @@ export default function App() {
         </Text>
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
-          mode="date"
           display="inline"
+          mode="date"
           onConfirm={handleConfirm}
           onCancel={hideDatePicker}
           confirmTextIOS="선택"
@@ -207,7 +213,7 @@ export default function App() {
                 value={editText}
                 returnKeyType="done"
                 onChangeText={changeText}
-                style={{ ...styles.edit, display: toDos[key].isEditing ? "none" : "" }}
+                style={{ ...styles.edit, display: toDos[key].isEditing ? "none" : "flex" }}
               />
 
               <Text
@@ -215,7 +221,7 @@ export default function App() {
                   ...styles.toDoText,
                   textDecorationLine: toDos[key].done ? "none" : "line-through",
                   color: toDos[key].done ? "black" : "#494949",
-                  display: toDos[key].isEditing ? "" : "none",
+                  display: toDos[key].isEditing ? "flex" : "none",
                 }}
               >
                 {toDos[key].text}
@@ -248,7 +254,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.bg,
+    backgroundColor: "black",
     paddingHorizontal: 20,
   },
   header: {
