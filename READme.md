@@ -4,6 +4,10 @@
 - asyncstorage : https://docs.expo.dev/versions/latest/sdk/async-storage/
 - React Navigation : https://reactnative.dev/docs/navigation
 
+참고
+
+- navigation header options : https://reactnavigation.org/docs/native-stack-navigator/#options
+
 오류
 
 - 맨 처음 실행 시 loadtodo에서 STORAGE_KEY 값이 null 값이라 이거 해결 해야할듯
