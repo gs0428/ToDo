@@ -4,6 +4,8 @@ import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 // 주석 다 풀면 Travel 페이지 나옴
 const STORAGE_KEY = "toDos";
