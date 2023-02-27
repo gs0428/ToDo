@@ -7,9 +7,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-// 주석 다 풀면 Travel 페이지 나옴
 const STORAGE_KEY = "toDos";
-// const REMEMBER_KEY = "@location";
 
 export default function App() {
   useEffect(() => {
@@ -23,26 +21,9 @@ export default function App() {
   const time = new Date().getTime();
   const DateID = year + "" + month + "" + day + "" + time;
   const today = year + "" + month + "" + day;
-  // const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
   const [editText, setEditText] = useState("");
-  // const travel = async () => {
-  //   try {
-  //     setWorking(false);
-  //     await AsyncStorage.setItem(REMEMBER_KEY, working.toString());
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // };
-  // const work = async () => {
-  //   try {
-  //     setWorking(true);
-  //     await AsyncStorage.setItem(REMEMBER_KEY, working.toString());
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // };
   const onChangeText = (e) => setText(e);
   const saveToDos = (toSave) => {
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
@@ -59,8 +40,6 @@ export default function App() {
       } else {
         setToDos(JSON.parse(s));
       }
-      // const loc = await AsyncStorage.getItem(REMEMBER_KEY);
-      // setWorking(loc !== "false" ? true : false);
     } catch (e) {
       console.log(e);
     }
@@ -73,7 +52,6 @@ export default function App() {
       const newToDos = {
         ...toDos,
         [DateID]: { text, done: "false", isEditing: "false", date: today },
-        //working,
       };
       console.log(newToDos);
       setToDos(newToDos);
@@ -161,25 +139,11 @@ export default function App() {
     <View style={styles.container}>
       <StatusBar style="light" />
       <View style={styles.header}>
-        {/* <TouchableOpacity onPress={work}> */}
         <TouchableOpacity>
           <Text style={{ ...styles.btnText, color: "white" }}>To Do List</Text>
-
-          {/* <Text style={{ ...styles.btnText, color: working ? "white" : theme.grey }}>Work</Text> */}
         </TouchableOpacity>
-        {/* <TouchableOpacity onPress={travel}>
-          <Text style={{ ...styles.btnText, color: !working ? "white" : theme.grey }}>Travel</Text>
-        </TouchableOpacity> */}
       </View>
-      <TextInput
-        onSubmitEditing={addToDo}
-        value={text}
-        returnKeyType="done"
-        onChangeText={onChangeText}
-        placeholder="할 일 추가"
-        // placeholder={working ? "Add a ToDo" : "where do you want to go?"}
-        style={styles.input}
-      />
+      <TextInput onSubmitEditing={addToDo} value={text} returnKeyType="done" onChangeText={onChangeText} placeholder="할 일 추가" style={styles.input} />
       <View style={styles.date}>
         <FontAwesome5 onPress={showDatePicker} name="calendar-alt" size={24} color="white" />
         <Text onPress={showDatePicker} style={styles.dateTxt}>
@@ -201,53 +165,47 @@ export default function App() {
         </Text>
       </View>
       <ScrollView>
-        {
-          Object.keys(toDos).map((key) => (
-            // toDos[key].working === working ? (
-            <View
-              style={{ ...styles.toDo, display: today === toDos[key].date ? "flex" : "none", backgroundColor: toDos[key].done ? "#404040" : "#A6A6A6" }}
-              key={key}
+        {Object.keys(toDos).map((key) => (
+          <View
+            style={{ ...styles.toDo, display: today === toDos[key].date ? "flex" : "none", backgroundColor: toDos[key].done ? "#404040" : "#A6A6A6" }}
+            key={key}
+          >
+            <TextInput
+              placeholder="..."
+              placeholderTextColor="#D9D9D9"
+              onSubmitEditing={() => editedToDo(key)}
+              value={editText}
+              returnKeyType="done"
+              onChangeText={changeText}
+              style={{ ...styles.edit, display: toDos[key].isEditing ? "none" : "flex" }}
+            />
+            <Text
+              style={{
+                ...styles.toDoText,
+                textDecorationLine: toDos[key].done ? "none" : "line-through",
+                color: toDos[key].done ? "black" : "#494949",
+                display: toDos[key].isEditing ? "flex" : "none",
+              }}
             >
-              <TextInput
-                placeholder="..."
-                placeholderTextColor="#D9D9D9"
-                onSubmitEditing={() => editedToDo(key)}
-                value={editText}
-                returnKeyType="done"
-                onChangeText={changeText}
-                style={{ ...styles.edit, display: toDos[key].isEditing ? "none" : "flex" }}
-              />
-
-              <Text
-                style={{
-                  ...styles.toDoText,
-                  textDecorationLine: toDos[key].done ? "none" : "line-through",
-                  color: toDos[key].done ? "black" : "#494949",
-                  display: toDos[key].isEditing ? "flex" : "none",
-                }}
-              >
-                {toDos[key].text}
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-                <TouchableOpacity disabled={toDos[key].done ? false : true} onPress={() => editToDo(key)}>
-                  <Feather style={{ ...styles.icon, color: toDos[key].done ? "white" : "#494949" }} name="edit" size={22} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => completeToDo(key)}>
-                  {toDos[key].done ? (
-                    <FontAwesome5 style={styles.icon} name="check-square" size={22} color="black" />
-                  ) : (
-                    <FontAwesome style={styles.icon} name="check-square" size={22} color="black" />
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => deleteToDo(key)}>
-                  <FontAwesome style={styles.icon} name="trash" size={22} color="#C01111" />
-                </TouchableOpacity>
-              </View>
+              {toDos[key].text}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+              <TouchableOpacity disabled={toDos[key].done ? false : true} onPress={() => editToDo(key)}>
+                <Feather style={{ ...styles.icon, color: toDos[key].done ? "white" : "#494949" }} name="edit" size={22} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => completeToDo(key)}>
+                {toDos[key].done ? (
+                  <FontAwesome5 style={styles.icon} name="check-square" size={22} color="black" />
+                ) : (
+                  <FontAwesome style={styles.icon} name="check-square" size={22} color="black" />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => deleteToDo(key)}>
+                <FontAwesome style={styles.icon} name="trash" size={22} color="#C01111" />
+              </TouchableOpacity>
             </View>
-          ))
-          //     : null
-          // )
-        }
+          </View>
+        ))}
       </ScrollView>
     </View>
   );
